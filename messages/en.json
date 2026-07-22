@@ -1,0 +1,101 @@
+{
+  "nav": {
+    "home": "Home",
+    "packages": "Packages",
+    "umroh": "Umroh",
+    "haji": "Hajj",
+    "about": "About",
+    "news": "News",
+    "testimonials": "Testimonials",
+    "contact": "Contact",
+    "whatsapp": "WhatsApp"
+  },
+  "home": {
+    "seeMorePackages": "See All Umroh Packages",
+    "seeMoreHajj": "See All Hajj Packages",
+    "seeMoreAbout": "Learn More About Us",
+    "seeMoreNews": "See All News",
+    "seeMoreTestimonials": "See More Testimonials",
+    "previewNote": "This is a preview — full page separate"
+  },
+  "package": {
+    "departure": "Departure",
+    "return": "Return",
+    "duration": "Days",
+    "durationFull": "{n} Days",
+    "priceFrom": "starting / person",
+    "viewDetail": "View Detail",
+    "available": "Available",
+    "limited": "Limited",
+    "full": "Fully Booked",
+    "closed": "Closed",
+    "quotaRemaining": "{remaining} of {total} seats left",
+    "quotaFull": "Fully Booked",
+    "fullyBooked": "Fully Booked",
+    "whatsappText": "Assalamualaikum, I'm interested in the {name} package. Please provide more info.",
+    "umroh": "Umroh",
+    "haji": "Hajj"
+  },
+  "monthFilter": {
+    "all": "All Months",
+    "empty": "No packages departing this month",
+    "seeAll": "See All Months"
+  },
+  "about": {
+    "title": "About Us"
+  },
+  "news": {
+    "readMore": "Read more →",
+    "noNews": "No news yet. Contact us for more information."
+  },
+  "testimonial": {
+    "title": "Testimonials"
+  },
+  "contact": {
+    "title": "Contact",
+    "callUs": "Call Us",
+    "followUs": "Follow Us"
+  },
+  "footer": {
+    "links": "Links",
+    "about": "About",
+    "news": "News",
+    "contact": "Contact",
+    "followUs": "Follow Us"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "errorTitle": "Something Went Wrong",
+    "tryAgain": "Try Again",
+    "notFound": "Page Not Found",
+    "notFoundDesc": "Sorry, the page you are looking for does not exist.",
+    "backHome": "Back to Home",
+    "emptyTitle": "No Data Yet",
+    "emptyDesc": "No content to display yet. Contact us via WhatsApp for more information.",
+    "contactWa": "Contact via WhatsApp",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {n}"
+  },
+  "admin": {
+    "login": "Admin Login",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "dashboard": "Dashboard",
+    "packages": "Packages",
+    "news": "News",
+    "testimonials": "Testimonials",
+    "settings": "Settings",
+    "logout": "Logout",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirmDelete": "Are you sure you want to delete?",
+    "uploadImage": "Upload Image",
+    "noData": "No data yet"
+  }
+}

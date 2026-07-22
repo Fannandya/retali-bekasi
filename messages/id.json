@@ -1,0 +1,101 @@
+{
+  "nav": {
+    "home": "Beranda",
+    "packages": "Paket",
+    "umroh": "Umroh",
+    "haji": "Haji",
+    "about": "Tentang",
+    "news": "Kabar",
+    "testimonials": "Testimoni",
+    "contact": "Kontak",
+    "whatsapp": "WhatsApp"
+  },
+  "home": {
+    "seeMorePackages": "Lihat Semua Paket Umroh",
+    "seeMoreHajj": "Lihat Semua Paket Haji",
+    "seeMoreAbout": "Selengkapnya Tentang Kami",
+    "seeMoreNews": "Lihat Semua Kabar",
+    "seeMoreTestimonials": "Lihat Testimoni Lainnya",
+    "previewNote": "Ini cuplikan — halaman penuh terpisah"
+  },
+  "package": {
+    "departure": "Berangkat",
+    "return": "Pulang",
+    "duration": "Hari",
+    "durationFull": "{n} Hari",
+    "priceFrom": "mulai / orang",
+    "viewDetail": "Lihat Detail",
+    "available": "Tersedia",
+    "limited": "Kuota Terbatas",
+    "full": "Kuota Penuh",
+    "closed": "Ditutup",
+    "quotaRemaining": "Sisa {remaining} dari {total} kursi",
+    "quotaFull": "Kuota Penuh",
+    "fullyBooked": "Kuota Penuh",
+    "whatsappText": "Assalamualaikum, saya tertarik dengan paket {name}. Mohon info lebih lanjut.",
+    "umroh": "Umroh",
+    "haji": "Haji"
+  },
+  "monthFilter": {
+    "all": "Semua Bulan",
+    "empty": "Tidak ada paket berangkat di bulan ini",
+    "seeAll": "Lihat Semua Bulan"
+  },
+  "about": {
+    "title": "Tentang Kami"
+  },
+  "news": {
+    "readMore": "Baca selengkapnya →",
+    "noNews": "Belum ada kabar terbaru. Hubungi kami untuk informasi lebih lanjut."
+  },
+  "testimonial": {
+    "title": "Testimoni"
+  },
+  "contact": {
+    "title": "Kontak",
+    "callUs": "Hubungi Kami",
+    "followUs": "Ikuti Kami"
+  },
+  "footer": {
+    "links": "Tautan",
+    "about": "Tentang",
+    "news": "Kabar",
+    "contact": "Kontak",
+    "followUs": "Ikuti Kami"
+  },
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan. Silakan coba lagi.",
+    "errorTitle": "Ada yang Salah",
+    "tryAgain": "Coba Lagi",
+    "notFound": "Halaman tidak ditemukan",
+    "notFoundDesc": "Maaf, halaman yang Anda cari tidak ada.",
+    "backHome": "Kembali ke Beranda",
+    "emptyTitle": "Belum Ada Data",
+    "emptyDesc": "Belum ada konten untuk ditampilkan. Hubungi kami via WhatsApp untuk informasi lebih lanjut.",
+    "contactWa": "Hubungi via WhatsApp",
+    "prev": "Sebelumnya",
+    "next": "Berikutnya",
+    "page": "Halaman {n}"
+  },
+  "admin": {
+    "login": "Login Admin",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "signIn": "Masuk",
+    "dashboard": "Dashboard",
+    "packages": "Paket",
+    "news": "Kabar",
+    "testimonials": "Testimoni",
+    "settings": "Pengaturan",
+    "logout": "Keluar",
+    "add": "Tambah",
+    "edit": "Edit",
+    "delete": "Hapus",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "confirmDelete": "Yakin ingin menghapus?",
+    "uploadImage": "Unggah Gambar",
+    "noData": "Belum ada data"
+  }
+}
