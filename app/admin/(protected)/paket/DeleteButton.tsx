@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { revalidatePackages, revalidateNews, revalidateTestimonials } from "@/lib/revalidate";
 
-export function DeleteButton({ id, type }: { id: string; type: string }) {
+export function DeleteButton({ id, type, onDeleted }: { id: string; type: string; onDeleted?: () => void }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -22,7 +22,11 @@ export function DeleteButton({ id, type }: { id: string; type: string }) {
       for (const path of paths) {
         await supabase.storage.from("brochures").remove([path]);
       }
-      await (supabase as any).from("packages").delete().eq("id", id);
+      const { error } = await (supabase as any).from("packages").delete().eq("id", id);
+      if (error) {
+        alert("Gagal menghapus paket: " + error.message);
+        return;
+      }
       await revalidatePackages();
     } else if (type === "news") {
       const result = await (supabase as any).from("news").select("cover_path").eq("id", id).single();
@@ -30,7 +34,11 @@ export function DeleteButton({ id, type }: { id: string; type: string }) {
       if (item?.cover_path) {
         await supabase.storage.from("news-images").remove([item.cover_path]);
       }
-      await (supabase as any).from("news").delete().eq("id", id);
+      const { error } = await (supabase as any).from("news").delete().eq("id", id);
+      if (error) {
+        alert("Gagal menghapus kabar: " + error.message);
+        return;
+      }
       await revalidateNews();
     } else if (type === "testimoni") {
       const result = await (supabase as any).from("testimonials").select("image_path, type").eq("id", id).single();
@@ -38,10 +46,15 @@ export function DeleteButton({ id, type }: { id: string; type: string }) {
       if (item?.type === "image" && item?.image_path) {
         await supabase.storage.from("testimoni").remove([item.image_path]);
       }
-      await (supabase as any).from("testimonials").delete().eq("id", id);
+      const { error } = await (supabase as any).from("testimonials").delete().eq("id", id);
+      if (error) {
+        alert("Gagal menghapus testimoni: " + error.message);
+        return;
+      }
       await revalidateTestimonials();
     }
 
+    onDeleted?.();
     router.refresh();
   };
 

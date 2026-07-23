@@ -7,6 +7,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { TestimonialEmbed } from "@/components/TestimonialEmbed";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getOptimizedUrl } from "@/lib/image";
+import { formatDate } from "@/lib/format";
 import { sanitize } from "@/lib/sanitize";
 
 export const revalidate = 3600;
@@ -48,9 +49,10 @@ export default async function HomePage({ params }: Props) {
   return (
     <>
       {/* HERO */}
-      <section className="hero" style={{ paddingTop: "70px" }}>
-        <div className="wrap">
-          <div>
+      <section className="hero">
+        <HeroCarousel images={settings.hero.images || []} />
+        <div className="wrap hero-wrap">
+          <div className="hero-glass">
             <span className="eyebrow">{t(settings.hero.eyebrow)}</span>
             <h1 dangerouslySetInnerHTML={{ __html: sanitize(t(settings.hero.title) || "") }} />
             <p className="lead">{t(settings.hero.subtitle)}</p>
@@ -70,9 +72,6 @@ export default async function HomePage({ params }: Props) {
                   </div>
                 ))}
             </div>
-          </div>
-          <div className="hero-card">
-            <HeroCarousel images={settings.hero.images || []} />
           </div>
         </div>
       </section>
@@ -105,7 +104,7 @@ export default async function HomePage({ params }: Props) {
       <section id="about" className="about">
         <div className="wrap">
           {(() => {
-            const img = getOptimizedUrl(settings.about_content?.image_url, { width: 700 });
+            const img = getOptimizedUrl(settings.about_content?.image_url);
             return img ? (
               <div className="ph" style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }} />
             ) : (
@@ -142,13 +141,13 @@ export default async function HomePage({ params }: Props) {
             {newsItems.map((item) => (
               <article key={item.id} className="news-card">
                 {(() => {
-                  const cover = getOptimizedUrl(item.cover_url, { width: 500 });
+                  const cover = getOptimizedUrl(item.cover_url);
                   return cover ? (
                     <div className="ph tall" style={{ backgroundImage: `url(${cover})`, backgroundSize: "cover" }} />
                   ) : null;
                 })()}
                 <div className="news-body">
-                  <span className="date">{item.published_at}</span>
+                  <span className="date">{formatDate(item.published_at, locale)}</span>
                   <h3>{t(item.title)}</h3>
                   <p>{t(item.excerpt)}</p>
                   <Link href={`/kabar/${item.slug}`} className="btn btn-ghost text-sm">Lihat Detail</Link>

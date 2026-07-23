@@ -58,6 +58,15 @@ export interface SiteSettings {
     about_text: { id: string; en: string };
     copyright: { id: string; en: string };
   };
+  visi_misi?: {
+    visi: { id: string; en: string };
+    misi: { id: string; en: string };
+  };
+  navbar_link: {
+    enabled: boolean;
+    label: { id: string; en: string };
+    url: string;
+  };
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -151,6 +160,21 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       en: "Official Kemenag-licensed umroh & hajj agency. Serving with trust since 2014.",
     },
     copyright: { id: "Semua hak dilindungi.", en: "All rights reserved." },
+  },
+  visi_misi: {
+    visi: {
+      id: "Menjadi biro perjalanan umroh & haji terpercaya yang memberikan pelayanan terbaik dan bimbingan ibadah yang khusyuk sesuai syariah.",
+      en: "To become a trusted umroh & hajj travel agency that provides the best service and solemn worship guidance according to sharia.",
+    },
+    misi: {
+      id: "Memberikan pelayanan profesional dan ramah sejak pendaftaran hingga kepulangan.\nMenyediakan paket perjalanan dengan harga terjangkau dan fasilitas terbaik.\nMembimbing jamaah dengan pembimbing berpengalaman dan bersertifikat.\nMenjaga komunikasi dan transparansi informasi kepada jamaah.",
+      en: "Providing professional and friendly service from registration to return.\nOffering travel packages at affordable prices with the best facilities.\nGuiding pilgrims with experienced and certified guides.\nMaintaining communication and information transparency with pilgrims.",
+    },
+  },
+  navbar_link: {
+    enabled: false,
+    label: { id: "Dokumen", en: "Documents" },
+    url: "",
   },
 };
 

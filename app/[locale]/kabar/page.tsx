@@ -58,7 +58,7 @@ export default async function NewsListPage({ params, searchParams }: Props) {
               {news.map((item) => (
                 <article key={item.id} className="news-card">
                   {item.cover_url && (
-                    <div className="ph tall" style={{ backgroundImage: `url(${getOptimizedUrl(item.cover_url, { width: 500 })})`, backgroundSize: "cover" }} />
+                    <div className="ph tall" style={{ backgroundImage: `url(${getOptimizedUrl(item.cover_url)})`, backgroundSize: "cover" }} />
                   )}
                   <div className="news-body">
                     <span className="date">{item.published_at}</span>

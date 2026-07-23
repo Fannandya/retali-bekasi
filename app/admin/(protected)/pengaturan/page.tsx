@@ -1,5 +1,6 @@
 import { SettingsForm } from "./SettingsForm";
 import { createClient } from "@/lib/supabase/server";
+import { parseSettings } from "@/lib/site-settings";
 
 export const dynamic = 'force-dynamic';
 
@@ -7,10 +8,7 @@ export default async function AdminPengaturanPage() {
   const supabase = await createClient();
   const { data: settings } = await (supabase.from("site_settings").select("key, value")) as unknown as { data: { key: string; value: any }[] | null };
 
-  const settingsMap: Record<string, any> = {};
-  for (const row of settings || []) {
-    settingsMap[row.key] = row.value;
-  }
+  const settingsMap = parseSettings(settings || []);
 
   return (
     <>

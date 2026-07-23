@@ -49,7 +49,7 @@ export default async function NewsDetailPage({ params }: Props) {
       <div className="wrap" style={{ maxWidth: "800px" }}>
         {item.cover_url && (
           <img
-            src={getOptimizedUrl(item.cover_url, { width: 800 }) ?? ""}
+            src={getOptimizedUrl(item.cover_url) ?? ""}
             alt=""
             style={{ width: "100%", borderRadius: "var(--radius)", marginBottom: "24px" }}
             loading="eager"

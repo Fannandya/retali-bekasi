@@ -124,7 +124,7 @@ export default async function UmrohDetailPage({ params }: Props) {
           <div className="detail-side">
             {pkg.brochure_url && (
               <img
-                src={getOptimizedUrl(pkg.brochure_url, { width: 600 }) ?? ""}
+                src={getOptimizedUrl(pkg.brochure_url) ?? ""}
                 alt=""
                 className="w-full rounded-xl shadow-sm"
                 loading="lazy"

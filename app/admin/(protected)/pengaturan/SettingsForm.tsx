@@ -151,13 +151,20 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
       if (logoInputRef.current) logoInputRef.current.value = "";
     }
 
+    const failedKeys: string[] = [];
     for (const [key, value] of Object.entries(data)) {
-      await sb.from("site_settings").upsert({ key, value }, { onConflict: "key" });
+      const { error } = await sb.from("site_settings").upsert({ key, value }, { onConflict: "key" });
+      if (error) failedKeys.push(key);
     }
     await revalidateSettings();
     setSaving(false);
-    setNotif({ type: "success", text: "Pengaturan berhasil disimpan" });
-    setTimeout(() => setNotif(null), 3000);
+
+    if (failedKeys.length > 0) {
+      setNotif({ type: "error", text: `Gagal menyimpan bagian: ${failedKeys.join(", ")}. Coba simpan ulang.` });
+    } else {
+      setNotif({ type: "success", text: "Pengaturan berhasil disimpan" });
+      setTimeout(() => setNotif(null), 3000);
+    }
     router.refresh();
   };
 
@@ -411,6 +418,13 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
                 + Tambah Legal
               </button>
             </div>
+
+            <hr className="my-4" />
+            <h4 className="font-semibold">Visi & Misi</h4>
+            <Field label="Visi (ID)" value={data.visi_misi?.visi?.id || ""} onChange={(v) => updateField("visi_misi", ["visi", "id"], v)} isTextarea />
+            <Field label="Visi (EN)" value={data.visi_misi?.visi?.en || ""} onChange={(v) => updateField("visi_misi", ["visi", "en"], v)} isTextarea />
+            <Field label="Misi (ID) — satu item per baris" value={data.visi_misi?.misi?.id || ""} onChange={(v) => updateField("visi_misi", ["misi", "id"], v)} isTextarea />
+            <Field label="Misi (EN) — satu item per baris" value={data.visi_misi?.misi?.en || ""} onChange={(v) => updateField("visi_misi", ["misi", "en"], v)} isTextarea />
           </>
         )}
 
@@ -440,6 +454,22 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
             <Field label="Facebook" value={data.socials?.facebook || ""} onChange={(v) => updateField("socials", ["facebook"], v)} />
             <Field label="TikTok" value={data.socials?.tiktok || ""} onChange={(v) => updateField("socials", ["tiktok"], v)} />
             <Field label="YouTube" value={data.socials?.youtube || ""} onChange={(v) => updateField("socials", ["youtube"], v)} />
+
+            <hr className="my-4" />
+            <h4 className="font-semibold">Tombol Navbar (Google Drive / link eksternal)</h4>
+            <p className="text-xs text-muted mb-2">Menambahkan tombol di menu navigasi yang membuka link di tab baru — misalnya link Google Drive brosur/dokumen.</p>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={data.navbar_link?.enabled || false}
+                onChange={(e) => updateField("navbar_link", ["enabled"], e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">Tampilkan tombol di navbar</span>
+            </label>
+            <Field label="Label Tombol (ID)" value={data.navbar_link?.label?.id || ""} onChange={(v) => updateField("navbar_link", ["label", "id"], v)} />
+            <Field label="Label Tombol (EN)" value={data.navbar_link?.label?.en || ""} onChange={(v) => updateField("navbar_link", ["label", "en"], v)} />
+            <Field label="Link Google Drive" value={data.navbar_link?.url || ""} onChange={(v) => updateField("navbar_link", ["url"], v)} />
           </>
         )}
 

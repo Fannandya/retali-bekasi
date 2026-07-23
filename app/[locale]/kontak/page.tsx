@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 export const revalidate = 3600;
 
@@ -31,26 +30,30 @@ export default async function KontakPage({ params }: Props) {
 
         <div className="contact-grid">
           <div className="contact-info">
-            <a href={`https://wa.me/${settings.contact.whatsapp_number}`} className="contact-item" target="_blank" rel="noopener noreferrer">
-              <strong>✆ WhatsApp</strong>
-              <span>{settings.contact.whatsapp_number}</span>
-            </a>
-            <a href={`tel:${settings.contact.phone}`} className="contact-item">
-              <strong>✆ Telepon</strong>
-              <span>{settings.contact.phone}</span>
-            </a>
-            <a href={`mailto:${settings.contact.email}`} className="contact-item">
-              <strong>✉ Email</strong>
-              <span>{settings.contact.email}</span>
-            </a>
-            <div className="contact-item">
-              <strong>📍 Alamat</strong>
-              <span>{t(settings.contact.address)}</span>
-            </div>
-
-            <div className="contact-item wa-card">
-              <WhatsAppButton settings={settings} className="btn btn-wa btn-lg" />
-            </div>
+            {settings.contact.whatsapp_number && (
+              <a href={`https://wa.me/${settings.contact.whatsapp_number}`} className="contact-item" target="_blank" rel="noopener noreferrer">
+                <strong>✆ WhatsApp</strong>
+                <span>{settings.contact.whatsapp_number}</span>
+              </a>
+            )}
+            {settings.contact.phone && (
+              <a href={`tel:${settings.contact.phone}`} className="contact-item">
+                <strong>✆ Telepon</strong>
+                <span>{settings.contact.phone}</span>
+              </a>
+            )}
+            {settings.contact.email && (
+              <a href={`mailto:${settings.contact.email}`} className="contact-item">
+                <strong>✉ Email</strong>
+                <span>{settings.contact.email}</span>
+              </a>
+            )}
+            {(settings.contact.address?.id || settings.contact.address?.en) && (
+              <div className="contact-item">
+                <strong>📍 Alamat</strong>
+                <span>{t(settings.contact.address)}</span>
+              </div>
+            )}
           </div>
 
           {settings.contact.map_embed_url && (

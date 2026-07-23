@@ -63,12 +63,22 @@ export function TestimoniList() {
       };
 
       if (editingId) {
-        await sb.from("testimonials").update(data).eq("id", editingId);
+        const { error } = await sb.from("testimonials").update(data).eq("id", editingId);
+        if (error) {
+          alert("Gagal menyimpan testimoni: " + error.message);
+          setLoading(false);
+          return;
+        }
       } else {
         const allRes = await sb.from("testimonials").select("order_index").order("order_index", { ascending: false }).limit(1);
         const all = allRes.data;
         const maxOrder = (all && all[0]?.order_index) || 0;
-        await sb.from("testimonials").insert({ ...data, order_index: maxOrder + 1 });
+        const { error } = await sb.from("testimonials").insert({ ...data, order_index: maxOrder + 1 });
+        if (error) {
+          alert("Gagal menambah testimoni: " + error.message);
+          setLoading(false);
+          return;
+        }
       }
     } else {
       let imageUrl = editImage?.image_url || "";
@@ -111,12 +121,22 @@ export function TestimoniList() {
       };
 
       if (editingId) {
-        await sb.from("testimonials").update(data).eq("id", editingId);
+        const { error } = await sb.from("testimonials").update(data).eq("id", editingId);
+        if (error) {
+          alert("Gagal menyimpan testimoni: " + error.message);
+          setLoading(false);
+          return;
+        }
       } else {
         const allRes = await sb.from("testimonials").select("order_index").order("order_index", { ascending: false }).limit(1);
         const all = allRes.data;
         const maxOrder = (all && all[0]?.order_index) || 0;
-        await sb.from("testimonials").insert({ ...data, order_index: maxOrder + 1 });
+        const { error } = await sb.from("testimonials").insert({ ...data, order_index: maxOrder + 1 });
+        if (error) {
+          alert("Gagal menambah testimoni: " + error.message);
+          setLoading(false);
+          return;
+        }
       }
     }
 
@@ -249,7 +269,7 @@ export function TestimoniList() {
                   <button onClick={() => edit(item)} className="text-green font-medium hover:underline mr-3">
                     Edit
                   </button>
-                  <DeleteButton id={item.id} type="testimoni" />
+                  <DeleteButton id={item.id} type="testimoni" onDeleted={fetchItems} />
                 </td>
               </tr>
             ))}
