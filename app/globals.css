@@ -329,10 +329,11 @@ header {
   z-index: 2;
 }
 .hero-glass {
-  background: rgba(249, 248, 244, 0.14);
+  background: rgba(71, 2, 40, 0.45);
   backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 22px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   padding: 24px 20px;
   box-shadow: 0 8px 32px rgba(71, 2, 40, 0.25);
 }
@@ -342,7 +343,7 @@ header {
   margin-bottom: 14px;
 }
 .hero h1 span {
-  color: var(--gold-2);
+  color: var(--tan);
 }
 .hero p.lead {
   font-size: 0.96rem;
@@ -366,7 +367,7 @@ header {
 }
 .trust b {
   font-size: 1.3rem;
-  color: var(--gold-2);
+  color: var(--tan);
 }
 .trust span {
   font-size: 0.74rem;
