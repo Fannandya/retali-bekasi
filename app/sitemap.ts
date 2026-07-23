@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://namatravel.com";
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
-  const packagesRes = await (supabase.from("packages").select("slug, type, updated_at")) as unknown as { data: { slug: string; type: string; updated_at: string }[] | null };
-  const newsRes = await (supabase.from("news").select("slug, updated_at").eq("is_published", true)) as unknown as { data: { slug: string; updated_at: string }[] | null };
+  const [packagesRes, newsRes] = await Promise.all([
+    supabase.from("packages").select("slug, type, updated_at") as unknown as Promise<{ data: { slug: string; type: string; updated_at: string }[] | null }>,
+    supabase.from("news").select("slug, updated_at").eq("is_published", true) as unknown as Promise<{ data: { slug: string; updated_at: string }[] | null }>,
+  ]);
 
   const packages = packagesRes.data || [];
   const news = newsRes.data || [];

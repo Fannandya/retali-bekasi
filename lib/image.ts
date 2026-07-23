@@ -11,7 +11,7 @@ export function getOptimizedUrl(
   const renderUrl = url.replace(STORAGE_PREFIX, RENDER_PREFIX);
   const params = new URLSearchParams();
   if (options?.width) params.set("width", String(options.width));
-  params.set("quality", String(options?.quality ?? 100));
+  params.set("quality", String(options?.quality ?? 75));
 
   return `${renderUrl}?${params.toString()}`;
 }

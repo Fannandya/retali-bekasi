@@ -10,8 +10,9 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/admin")) {
     return updateSession(request);
   }
-  const response = intlMiddleware(request);
-  return updateSession(request, response);
+  // Public routes have no user-facing session (only /admin authenticates),
+  // so skip the Supabase auth round-trip entirely here.
+  return intlMiddleware(request);
 }
 
 export const config = {

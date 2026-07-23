@@ -8,25 +8,37 @@ export function WhatsAppButton({
   packageName,
   label,
   className = "",
+  soldOut = false,
+  locale = "id",
 }: {
   settings: SiteSettings;
   packageName?: string;
   label?: string;
   className?: string;
+  soldOut?: boolean;
+  locale?: string;
 }) {
-  const text = packageName
-    ? `Assalamualaikum, saya tertarik dengan paket ${packageName}. Mohon info lebih lanjut.`
-    : "Assalamualaikum, saya ingin konsultasi umroh & haji.";
+  const text =
+    soldOut && packageName
+      ? `Assalamualaikum, saya lihat paket ${packageName} kuotanya sudah penuh. Apakah ada waiting list atau jadwal keberangkatan berikutnya?`
+      : packageName
+        ? `Assalamualaikum, saya tertarik dengan paket ${packageName}. Mohon info lebih lanjut.`
+        : "Assalamualaikum, saya ingin konsultasi umroh & haji.";
   const url = `https://wa.me/${settings.contact.whatsapp_number}?text=${encodeURIComponent(text)}`;
 
   const handleClick = () => {
-    track("whatsapp_click", { package: packageName || "general" });
+    track("whatsapp_click", { package: packageName || "general", soldOut });
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const soldOutLabel = locale === "en" ? "Fully Booked — Ask Waiting List" : "Kuota Penuh — Tanya Waiting List";
+
   return (
-    <button onClick={handleClick} className={`btn btn-wa ${className}`}>
-      <WhatsAppIcon /> {label || "WhatsApp"}
+    <button
+      onClick={handleClick}
+      className={`btn btn-wa ${soldOut ? "btn-wa-soldout" : ""} ${className}`}
+    >
+      <WhatsAppIcon /> {soldOut ? soldOutLabel : label || "WhatsApp"}
     </button>
   );
 }

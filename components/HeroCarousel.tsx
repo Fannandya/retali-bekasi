@@ -19,7 +19,14 @@ export function HeroCarousel({ images }: Props) {
 
   return (
     <div className="hero-carousel">
-      <img src={getOptimizedUrl(images[index].url) ?? ""} alt="" className="hero-img" />
+      <img
+        src={getOptimizedUrl(images[index].url, { width: 800 }) ?? ""}
+        alt=""
+        className="hero-img"
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+      />
 
       {images.length > 1 && (
         <>

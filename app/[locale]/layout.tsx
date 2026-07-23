@@ -1,19 +1,25 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppButton";
 import { getSiteSettings } from "@/lib/site-settings";
+import { routing } from "@/i18n/routing";
 
 type Props = {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 };
 
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const settings = await getSiteSettings();
   return {
     title: {
@@ -37,8 +43,8 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
-  const messages = await getMessages();
-  const settings = await getSiteSettings();
+  setRequestLocale(locale);
+  const [messages, settings] = await Promise.all([getMessages(), getSiteSettings()]);
 
   return (
     <NextIntlClientProvider messages={messages}>

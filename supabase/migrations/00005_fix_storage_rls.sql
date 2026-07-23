@@ -1,16 +1,9 @@
--- ============================================================
--- RLS Policies untuk bucket 'about', 'hero', & 'logos'
--- Jalankan di Supabase SQL Editor setelah bucket dibuat
--- Catatan: SELECT policy tidak perlu untuk public bucket
--- (file bisa diakses langsung via URL)
--- ============================================================
+-- Fix: about/hero/logos/testimoni storage buckets allowed any anon/authenticated
+-- visitor to insert and delete objects (no admin check). Restrict to admin only,
+-- matching the brochures/news-images/site-assets pattern from 00001_init.sql.
 
--- === BUCKET: about ===
--- Hapus SELECT policy sebelumnya jika ada
-drop policy if exists "about_select_public" on storage.objects;
 drop policy if exists "about_insert_anon" on storage.objects;
 drop policy if exists "about_delete_anon" on storage.objects;
-
 create policy "about_insert_anon"
 on storage.objects for insert
 with check (
@@ -18,7 +11,6 @@ with check (
   and public.is_admin()
   and storage."extension"(name) in ('jpg', 'jpeg', 'png', 'webp')
 );
-
 create policy "about_delete_anon"
 on storage.objects for delete
 using (
@@ -26,11 +18,8 @@ using (
   and public.is_admin()
 );
 
--- === BUCKET: hero ===
-drop policy if exists "hero_select_public" on storage.objects;
 drop policy if exists "hero_insert_anon" on storage.objects;
 drop policy if exists "hero_delete_anon" on storage.objects;
-
 create policy "hero_insert_anon"
 on storage.objects for insert
 with check (
@@ -38,7 +27,6 @@ with check (
   and public.is_admin()
   and storage."extension"(name) in ('jpg', 'jpeg', 'png', 'webp')
 );
-
 create policy "hero_delete_anon"
 on storage.objects for delete
 using (
@@ -46,10 +34,8 @@ using (
   and public.is_admin()
 );
 
--- === BUCKET: logos ===
 drop policy if exists "logos_insert_anon" on storage.objects;
 drop policy if exists "logos_delete_anon" on storage.objects;
-
 create policy "logos_insert_anon"
 on storage.objects for insert
 with check (
@@ -57,7 +43,6 @@ with check (
   and public.is_admin()
   and storage."extension"(name) in ('png', 'svg', 'webp')
 );
-
 create policy "logos_delete_anon"
 on storage.objects for delete
 using (
@@ -65,13 +50,8 @@ using (
   and public.is_admin()
 );
 
--- === BUCKET: testimonials ===
-insert into storage.buckets (id, name, public) values ('testimoni','testimoni', true)
-  on conflict (id) do nothing;
-
 drop policy if exists "testimoni_insert_anon" on storage.objects;
 drop policy if exists "testimoni_delete_anon" on storage.objects;
-
 create policy "testimoni_insert_anon"
 on storage.objects for insert
 with check (
@@ -79,7 +59,6 @@ with check (
   and public.is_admin()
   and storage."extension"(name) in ('jpg', 'jpeg', 'png', 'webp')
 );
-
 create policy "testimoni_delete_anon"
 on storage.objects for delete
 using (

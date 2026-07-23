@@ -1,5 +1,6 @@
 import "server-only";
-import { createClient } from "./supabase/server";
+import { cache } from "react";
+import { createPublicClient } from "./supabase/public";
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -191,8 +192,8 @@ export function parseSettings(rows: Array<{ key: string; value: Json }>): SiteSe
   return merged as SiteSettings;
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
-  const supabase = await createClient();
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("site_settings")
     .select("key, value");
@@ -200,4 +201,4 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   if (!data) return DEFAULT_SETTINGS;
 
   return parseSettings(data);
-}
+});

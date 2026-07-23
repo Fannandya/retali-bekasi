@@ -3,10 +3,11 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
 import { PackageCard } from "@/components/PackageCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { TestimonialEmbed } from "@/components/TestimonialEmbed";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getOptimizedUrl } from "@/lib/image";
+import { sanitize } from "@/lib/sanitize";
 
 export const revalidate = 3600;
 
@@ -16,27 +17,29 @@ type Props = {
 
 export default async function HomePage({ params }: Props) {
   const { locale } = await params;
-  const settings = await getSiteSettings();
   const t = (field: any) => pickLocale(field, locale);
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
-  const featuredRes = await supabase
-    .from("packages")
-    .select("*")
-    .eq("is_featured", true)
-    .order("departure_date")
-    .limit(3) as unknown as { data: any[] | null };
-  const newsRes = await supabase
-    .from("news")
-    .select("*")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false })
-    .limit(3) as unknown as { data: any[] | null };
-  const testimoniRes = await supabase
-    .from("testimonials")
-    .select("*")
-    .order("order_index")
-    .limit(3) as unknown as { data: any[] | null };
+  const [settings, featuredRes, newsRes, testimoniRes] = await Promise.all([
+    getSiteSettings(),
+    supabase
+      .from("packages")
+      .select("*")
+      .eq("is_featured", true)
+      .order("departure_date")
+      .limit(3) as unknown as Promise<{ data: any[] | null }>,
+    supabase
+      .from("news")
+      .select("*")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false })
+      .limit(3) as unknown as Promise<{ data: any[] | null }>,
+    supabase
+      .from("testimonials")
+      .select("*")
+      .order("order_index")
+      .limit(3) as unknown as Promise<{ data: any[] | null }>,
+  ]);
 
   const featuredPackages = featuredRes.data || [];
   const newsItems = newsRes.data || [];
@@ -49,7 +52,7 @@ export default async function HomePage({ params }: Props) {
         <div className="wrap">
           <div>
             <span className="eyebrow">{t(settings.hero.eyebrow)}</span>
-            <h1 dangerouslySetInnerHTML={{ __html: t(settings.hero.title) }} />
+            <h1 dangerouslySetInnerHTML={{ __html: sanitize(t(settings.hero.title) || "") }} />
             <p className="lead">{t(settings.hero.subtitle)}</p>
             <div className="hero-cta">
               <Link href={settings.hero.primary_cta.href} className="btn btn-gold">
@@ -102,7 +105,7 @@ export default async function HomePage({ params }: Props) {
       <section id="about" className="about">
         <div className="wrap">
           {(() => {
-            const img = getOptimizedUrl(settings.about_content?.image_url);
+            const img = getOptimizedUrl(settings.about_content?.image_url, { width: 700 });
             return img ? (
               <div className="ph" style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }} />
             ) : (
@@ -139,9 +142,9 @@ export default async function HomePage({ params }: Props) {
             {newsItems.map((item) => (
               <article key={item.id} className="news-card">
                 {(() => {
-                  const cover = getOptimizedUrl(item.cover_url);
+                  const cover = getOptimizedUrl(item.cover_url, { width: 500 });
                   return cover ? (
-                    <div className="ph" style={{ backgroundImage: `url(${cover})`, backgroundSize: "cover" }} />
+                    <div className="ph tall" style={{ backgroundImage: `url(${cover})`, backgroundSize: "cover" }} />
                   ) : null;
                 })()}
                 <div className="news-body">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -15,6 +16,9 @@ export function Header({
   locale: string;
 }) {
   const t = useTranslations("nav");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   const navLinks = [
     { href: "/", label: "home" },
@@ -29,7 +33,7 @@ export function Header({
   return (
     <header className="sticky top-0 z-50 bg-white/92 backdrop-blur border-b border-line">
       <div className="wrap nav">
-        <Link href="/" className="brand">
+        <Link href="/" className="brand" onClick={closeMenu}>
           {settings.branding.logo_url ? (
             <img src={settings.branding.logo_url} alt={settings.branding.brand_name} className="logo-img" />
           ) : (
@@ -41,9 +45,9 @@ export function Header({
           </span>
         </Link>
 
-        <nav className="menu">
+        <nav className={`menu ${menuOpen ? "open" : ""}`}>
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
+            <Link key={link.href} href={link.href} onClick={closeMenu}>
               {t(link.label)}
             </Link>
           ))}
@@ -60,9 +64,19 @@ export function Header({
           >
             <WhatsAppIcon />
           </a>
-          <button className="hamburger">☰</button>
+          <button
+            className="hamburger"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
+          >
+            {menuOpen ? "✕" : "☰"}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <div className="mobile-overlay" onClick={closeMenu} />
+      )}
     </header>
   );
 }

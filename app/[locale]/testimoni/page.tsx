@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { TestimonialEmbed } from "@/components/TestimonialEmbed";
 
 export const revalidate = 3600;
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TestimoniPage({ params }: Props) {
   const { locale } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const t = (field: any) => pickLocale(field, locale);
   const desc = (item: any) => pickLocale(item.description, locale);
 

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { Pagination } from "@/components/Pagination";
+import { getOptimizedUrl } from "@/lib/image";
 
 export const revalidate = 3600;
 
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewsListPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { page } = await searchParams;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const t = (field: any) => pickLocale(field, locale);
 
   const currentPage = page ? parseInt(page, 10) : 1;
@@ -57,7 +58,7 @@ export default async function NewsListPage({ params, searchParams }: Props) {
               {news.map((item) => (
                 <article key={item.id} className="news-card">
                   {item.cover_url && (
-                    <div className="ph" style={{ backgroundImage: `url(${item.cover_url})`, backgroundSize: "cover" }} />
+                    <div className="ph tall" style={{ backgroundImage: `url(${getOptimizedUrl(item.cover_url, { width: 500 })})`, backgroundSize: "cover" }} />
                   )}
                   <div className="news-body">
                     <span className="date">{item.published_at}</span>

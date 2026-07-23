@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getSiteSettings } from "@/lib/site-settings";
+import { cache } from "react";
 import { pickLocale } from "@/lib/pickLocale";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { RichText } from "@/components/RichText";
 import { formatDate } from "@/lib/format";
+import { getOptimizedUrl } from "@/lib/image";
 import type { Database } from "@/types/database";
 
 export const revalidate = 3600;
@@ -13,16 +14,20 @@ type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const supabase = await createClient();
-  const { data: raw } = await supabase
+const getNewsBySlug = cache(async (slug: string) => {
+  const supabase = createPublicClient();
+  const { data } = await supabase
     .from("news")
     .select("*")
     .eq("slug", slug)
     .eq("is_published", true)
     .single();
-  const item = raw as Database["public"]["Tables"]["news"]["Row"] | null;
+  return data as Database["public"]["Tables"]["news"]["Row"] | null;
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const item = await getNewsBySlug(slug);
 
   if (!item) return { title: "Not Found" };
   return {
@@ -33,16 +38,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NewsDetailPage({ params }: Props) {
   const { locale, slug } = await params;
-  const supabase = await createClient();
   const t = (field: any) => pickLocale(field, locale);
 
-  const { data: rawDetail } = await supabase
-    .from("news")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .single();
-  const item = rawDetail as Database["public"]["Tables"]["news"]["Row"] | null;
+  const item = await getNewsBySlug(slug);
 
   if (!item) notFound();
 
@@ -50,7 +48,13 @@ export default async function NewsDetailPage({ params }: Props) {
     <article style={{ paddingTop: "80px", paddingBottom: "64px" }}>
       <div className="wrap" style={{ maxWidth: "800px" }}>
         {item.cover_url && (
-          <img src={item.cover_url} alt="" style={{ width: "100%", borderRadius: "var(--radius)", marginBottom: "24px" }} />
+          <img
+            src={getOptimizedUrl(item.cover_url, { width: 800 }) ?? ""}
+            alt=""
+            style={{ width: "100%", borderRadius: "var(--radius)", marginBottom: "24px" }}
+            loading="eager"
+            decoding="async"
+          />
         )}
         <span className="date">{item.published_at ? formatDate(item.published_at, locale) : ""}</span>
         <h1>{t(item.title)}</h1>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { PackageCard } from "@/components/PackageCard";
 import { MonthFilter } from "@/components/MonthFilter";
 import { SortFilter } from "@/components/SortFilter";
@@ -30,8 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function UmrohListPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { bulan, page, sort } = await searchParams;
-  const settings = await getSiteSettings();
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const currentMonth = bulan ? parseInt(bulan, 10) : null;
   const currentPage = page ? parseInt(page, 10) : 1;
@@ -59,18 +58,20 @@ export default async function UmrohListPage({ params, searchParams }: Props) {
 
   const from = (currentPage - 1) * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
-  const result = await query.range(from, to) as unknown as { data: any[] | null; count: number | null };
+
+  const [result, monthsRes] = await Promise.all([
+    query.range(from, to) as unknown as Promise<{ data: any[] | null; count: number | null }>,
+    supabase
+      .from("packages")
+      .select("departure_month")
+      .eq("type", "umroh") as unknown as Promise<{ data: { departure_month: number }[] | null }>,
+  ]);
   const packages = result.data;
   const count = result.count;
 
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1;
 
-  const { data: monthsData } = await supabase
-    .from("packages")
-    .select("departure_month")
-    .eq("type", "umroh") as unknown as { data: { departure_month: number }[] | null };
-
-  const availableMonths = [...new Set((monthsData || []).map((r) => r.departure_month))].sort();
+  const availableMonths = [...new Set((monthsRes.data || []).map((r) => r.departure_month))].sort();
 
   if (currentMonth && !availableMonths.includes(currentMonth)) {
     return (

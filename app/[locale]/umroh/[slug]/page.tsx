@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { formatDate, formatDuration, formatRupiah } from "@/lib/format";
 import { getOptimizedUrl } from "@/lib/image";
 import type { Database } from "@/types/database";
@@ -16,16 +17,20 @@ type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const supabase = await createClient();
-  const { data: raw } = await supabase
+const getUmrohBySlug = cache(async (slug: string) => {
+  const supabase = createPublicClient();
+  const { data } = await supabase
     .from("packages")
     .select("*")
     .eq("type", "umroh")
     .eq("slug", slug)
     .single();
-  const pkg = raw as Database["public"]["Tables"]["packages"]["Row"] | null;
+  return data as Database["public"]["Tables"]["packages"]["Row"] | null;
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const pkg = await getUmrohBySlug(slug);
 
   if (!pkg) return { title: "Not Found" };
 
@@ -37,17 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UmrohDetailPage({ params }: Props) {
   const { locale, slug } = await params;
-  const settings = await getSiteSettings();
-  const supabase = await createClient();
   const t = (field: any) => pickLocale(field, locale);
 
-  const { data: rawDetail } = await supabase
-    .from("packages")
-    .select("*")
-    .eq("type", "umroh")
-    .eq("slug", slug)
-    .single();
-  const pkg = rawDetail as Database["public"]["Tables"]["packages"]["Row"] | null;
+  const [settings, pkg] = await Promise.all([getSiteSettings(), getUmrohBySlug(slug)]);
 
   if (!pkg) notFound();
 
@@ -97,6 +94,8 @@ export default async function UmrohDetailPage({ params }: Props) {
               settings={settings}
               packageName={t(pkg.name)}
               className="btn btn-wa btn-lg"
+              soldOut={pkg.remaining_quota === 0}
+              locale={locale}
             />
 
             {pkg.price_includes && (
@@ -124,7 +123,13 @@ export default async function UmrohDetailPage({ params }: Props) {
 
           <div className="detail-side">
             {pkg.brochure_url && (
-              <img src={getOptimizedUrl(pkg.brochure_url) ?? ""} alt="" className="w-full rounded-xl shadow-sm" />
+              <img
+                src={getOptimizedUrl(pkg.brochure_url, { width: 600 }) ?? ""}
+                alt=""
+                className="w-full rounded-xl shadow-sm"
+                loading="lazy"
+                decoding="async"
+              />
             )}
           </div>
         </div>
