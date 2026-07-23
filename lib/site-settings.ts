@@ -62,7 +62,7 @@ export interface SiteSettings {
     visi: { id: string; en: string };
     misi: { id: string; en: string };
   };
-  navbar_link: {
+  gallery_link: {
     enabled: boolean;
     label: { id: string; en: string };
     url: string;
@@ -118,6 +118,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         en: "Real pilgrim experiences in video.",
       },
     },
+    galeri: {
+      eyebrow: { id: "Galeri", en: "Gallery" },
+      title: { id: "Galeri Foto", en: "Photo Gallery" },
+      subtitle: {
+        id: "Dokumentasi kegiatan & momen jamaah kami.",
+        en: "Documentation of our pilgrims' activities & moments.",
+      },
+    },
   },
   about_content: {
     snippet: {
@@ -171,9 +179,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       en: "Providing professional and friendly service from registration to return.\nOffering travel packages at affordable prices with the best facilities.\nGuiding pilgrims with experienced and certified guides.\nMaintaining communication and information transparency with pilgrims.",
     },
   },
-  navbar_link: {
+  gallery_link: {
     enabled: false,
-    label: { id: "Dokumen", en: "Documents" },
+    label: { id: "Lihat Galeri Lengkap", en: "View Full Gallery" },
     url: "",
   },
 };

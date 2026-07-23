@@ -3,6 +3,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
 import { PackageCard } from "@/components/PackageCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { GalleryCarousel } from "@/components/GalleryCarousel";
 import { createPublicClient } from "@/lib/supabase/public";
 import { TestimonialEmbed } from "@/components/TestimonialEmbed";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
@@ -191,6 +192,34 @@ export default async function HomePage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {/* GALERI */}
+      {((settings.hero.images && settings.hero.images.length > 0) || settings.gallery_link?.enabled) && (
+        <section id="galeri">
+          <div className="wrap">
+            <div className="sec-head">
+              <span className="eyebrow">{t(settings.section_headings.galeri?.eyebrow)}</span>
+              <h2>{t(settings.section_headings.galeri?.title)}</h2>
+              <p>{t(settings.section_headings.galeri?.subtitle)}</p>
+            </div>
+            {settings.hero.images && settings.hero.images.length > 0 && (
+              <GalleryCarousel images={settings.hero.images} />
+            )}
+            {settings.gallery_link?.enabled && /^https?:\/\//.test(settings.gallery_link?.url || "") && (
+              <div className="sec-actions">
+                <a
+                  href={settings.gallery_link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary seemore"
+                >
+                  {t(settings.gallery_link.label)} <SeeMoreIcon />
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* CTA BAND */}
       <section className="cta-band">

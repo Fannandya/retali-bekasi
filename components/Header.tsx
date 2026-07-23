@@ -51,16 +51,6 @@ export function Header({
               {t(link.label)}
             </Link>
           ))}
-          {settings.navbar_link?.enabled && /^https?:\/\//.test(settings.navbar_link?.url || "") && (
-            <a
-              href={settings.navbar_link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={closeMenu}
-            >
-              {pickLocale(settings.navbar_link.label, locale)}
-            </a>
-          )}
         </nav>
 
         <div className="nav-actions">

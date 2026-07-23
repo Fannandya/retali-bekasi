@@ -278,6 +278,22 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
                 />
               </label>
             </div>
+
+            <hr className="my-4" />
+            <h4 className="font-semibold">Tombol Galeri (Google Drive / link eksternal)</h4>
+            <p className="text-xs text-muted mb-2">Tombol di section Galeri (homepage) yang membuka link di tab baru — misalnya link Google Drive brosur/dokumen.</p>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={data.gallery_link?.enabled || false}
+                onChange={(e) => updateField("gallery_link", ["enabled"], e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">Tampilkan tombol di section Galeri</span>
+            </label>
+            <Field label="Label Tombol (ID)" value={data.gallery_link?.label?.id || ""} onChange={(v) => updateField("gallery_link", ["label", "id"], v)} />
+            <Field label="Label Tombol (EN)" value={data.gallery_link?.label?.en || ""} onChange={(v) => updateField("gallery_link", ["label", "en"], v)} />
+            <Field label="Link Google Drive" value={data.gallery_link?.url || ""} onChange={(v) => updateField("gallery_link", ["url"], v)} />
           </>
         )}
 
@@ -328,7 +344,7 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
         {activeTab === 3 && (
           <>
             <h3 className="font-bold text-lg">Judul Section</h3>
-            {["paket", "kabar", "testimoni", "about"].map((section) => (
+            {["paket", "kabar", "testimoni", "galeri", "about"].map((section) => (
               <div key={section} className="p-3 bg-bg rounded-lg space-y-2">
                 <h4 className="font-semibold capitalize">{section}</h4>
                 <Field label="Eyebrow (ID)" value={data.section_headings?.[section]?.eyebrow?.id || ""} onChange={(v) => updateField("section_headings", [section, "eyebrow", "id"], v)} />
@@ -454,22 +470,6 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
             <Field label="Facebook" value={data.socials?.facebook || ""} onChange={(v) => updateField("socials", ["facebook"], v)} />
             <Field label="TikTok" value={data.socials?.tiktok || ""} onChange={(v) => updateField("socials", ["tiktok"], v)} />
             <Field label="YouTube" value={data.socials?.youtube || ""} onChange={(v) => updateField("socials", ["youtube"], v)} />
-
-            <hr className="my-4" />
-            <h4 className="font-semibold">Tombol Navbar (Google Drive / link eksternal)</h4>
-            <p className="text-xs text-muted mb-2">Menambahkan tombol di menu navigasi yang membuka link di tab baru — misalnya link Google Drive brosur/dokumen.</p>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={data.navbar_link?.enabled || false}
-                onChange={(e) => updateField("navbar_link", ["enabled"], e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm font-medium">Tampilkan tombol di navbar</span>
-            </label>
-            <Field label="Label Tombol (ID)" value={data.navbar_link?.label?.id || ""} onChange={(v) => updateField("navbar_link", ["label", "id"], v)} />
-            <Field label="Label Tombol (EN)" value={data.navbar_link?.label?.en || ""} onChange={(v) => updateField("navbar_link", ["label", "en"], v)} />
-            <Field label="Link Google Drive" value={data.navbar_link?.url || ""} onChange={(v) => updateField("navbar_link", ["url"], v)} />
           </>
         )}
 

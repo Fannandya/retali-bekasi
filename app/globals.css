@@ -800,6 +800,62 @@ header {
   line-height: 1.5;
 }
 
+/* ======= GALLERY ======= */
+.gallery-carousel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.gallery-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.gallery-slide.active {
+  opacity: 1;
+}
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: 0.2s;
+}
+.gallery-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+.gallery-nav-prev {
+  left: 12px;
+}
+.gallery-nav-next {
+  right: 12px;
+}
+@media (max-width: 560px) {
+  .gallery-carousel {
+    aspect-ratio: 4/3;
+  }
+}
+
 /* ======= CTA BAND ======= */
 .cta-band {
   background: var(--gold);
