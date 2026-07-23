@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ImageLightbox } from "./ImageLightbox";
+import { getOptimizedUrl } from "@/lib/image";
 
 type Props = {
   brochureUrl: string | null;
@@ -10,24 +11,26 @@ type Props = {
 };
 
 export function PackageImageButtons({ brochureUrl, itineraryUrl, packageName }: Props) {
+  const bUrl = getOptimizedUrl(brochureUrl, { quality: 100 });
+  const iUrl = getOptimizedUrl(itineraryUrl, { quality: 100 });
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
-  if (!brochureUrl && !itineraryUrl) return null;
+  if (!bUrl && !iUrl) return null;
 
   return (
     <>
       <div className="flex gap-3 mt-4">
-        {itineraryUrl && (
+        {iUrl && (
           <button
-            onClick={() => setLightbox({ src: itineraryUrl, alt: `Itinerary ${packageName}` })}
+            onClick={() => setLightbox({ src: iUrl, alt: `Itinerary ${packageName}` })}
             className="btn btn-ghost"
           >
             Lihat Itinerary
           </button>
         )}
-        {brochureUrl && (
+        {bUrl && (
           <button
-            onClick={() => setLightbox({ src: brochureUrl, alt: `Brosur ${packageName}` })}
+            onClick={() => setLightbox({ src: bUrl, alt: `Brosur ${packageName}` })}
             className="btn btn-ghost"
           >
             Lihat Brosur

@@ -343,7 +343,7 @@ header {
   min-height: 120px;
 }
 .ph.tall {
-  aspect-ratio: 4/3;
+  aspect-ratio: 4/5;
 }
 .ph.wide {
   aspect-ratio: 16/9;
@@ -514,6 +514,32 @@ header {
 .month-btn.disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.sort-select {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  appearance: auto;
+}
+.sort-select:hover {
+  border-color: var(--green);
+  color: var(--green);
 }
 
 /* ======= HERO CAROUSEL ======= */

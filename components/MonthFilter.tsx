@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { getMonthName } from "@/lib/format";
 
 export function MonthFilter({
@@ -14,12 +15,25 @@ export function MonthFilter({
   availableMonths: number[];
   basePath: string;
 }) {
+  const searchParams = useSearchParams();
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  const buildHref = (month: number | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (month) {
+      params.set("bulan", String(month));
+    } else {
+      params.delete("bulan");
+    }
+    params.delete("page");
+    const qs = params.toString();
+    return qs ? `${basePath}?${qs}` : basePath;
+  };
 
   return (
     <div className="month-filter">
       <Link
-        href={basePath}
+        href={buildHref(null)}
         className={`month-btn ${currentMonth === null ? "active" : ""}`}
         aria-pressed={currentMonth === null}
       >
@@ -30,7 +44,7 @@ export function MonthFilter({
         return (
           <Link
             key={m}
-            href={`${basePath}?bulan=${m}`}
+            href={buildHref(m)}
             className={`month-btn ${currentMonth === m ? "active" : ""} ${disabled ? "disabled" : ""}`}
             aria-pressed={currentMonth === m}
             aria-disabled={disabled}

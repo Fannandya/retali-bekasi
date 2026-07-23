@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
 import { RichText } from "@/components/RichText";
+import { getOptimizedUrl } from "@/lib/image";
 
 export const revalidate = 3600;
 
@@ -22,12 +23,13 @@ export default async function AboutPage({ params }: Props) {
   const { locale } = await params;
   const settings = await getSiteSettings();
   const t = (field: any) => pickLocale(field, locale);
+  const aboutImg = getOptimizedUrl(settings.about_content?.image_url);
 
   return (
     <section className="about" style={{ paddingTop: "80px" }}>
       <div className="wrap" style={{ gridTemplateColumns: "1fr 1fr", gap: "44px", display: "grid", alignItems: "center" }}>
-        {settings.about_content?.image_url ? (
-          <div className="ph" style={{ backgroundImage: `url(${settings.about_content.image_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+        {aboutImg ? (
+          <div className="ph" style={{ backgroundImage: `url(${aboutImg})`, backgroundSize: "cover", backgroundPosition: "center" }} />
         ) : (
           <div className="ph" />
         )}

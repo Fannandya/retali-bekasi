@@ -5,6 +5,7 @@ import { pickLocale } from "@/lib/pickLocale";
 import { createClient } from "@/lib/supabase/server";
 import { PackageCard } from "@/components/PackageCard";
 import { MonthFilter } from "@/components/MonthFilter";
+import { SortFilter } from "@/components/SortFilter";
 import { Pagination } from "@/components/Pagination";
 
 export const revalidate = 3600;
@@ -13,7 +14,7 @@ const ITEMS_PER_PAGE = 12;
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ bulan?: string; page?: string }>;
+  searchParams: Promise<{ bulan?: string; page?: string; sort?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UmrohListPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { bulan, page } = await searchParams;
+  const { bulan, page, sort } = await searchParams;
   const settings = await getSiteSettings();
   const supabase = await createClient();
 
@@ -42,8 +43,15 @@ export default async function UmrohListPage({ params, searchParams }: Props) {
   let query = supabase
     .from("packages")
     .select("*", { count: "exact" })
-    .eq("type", "umroh")
-    .order("departure_date");
+    .eq("type", "umroh");
+
+  if (sort === "price_asc") {
+    query = query.order("price", { ascending: true });
+  } else if (sort === "price_desc") {
+    query = query.order("price", { ascending: false });
+  } else {
+    query = query.order("departure_date", { ascending: false });
+  }
 
   if (currentMonth) {
     query = query.eq("departure_month", currentMonth);
@@ -86,6 +94,10 @@ export default async function UmrohListPage({ params, searchParams }: Props) {
     );
   }
 
+  const paginationParams: Record<string, string> = {};
+  if (currentMonth) paginationParams.bulan = String(currentMonth);
+  if (sort) paginationParams.sort = sort;
+
   return (
     <section style={{ paddingTop: "80px" }}>
       <div className="wrap">
@@ -93,12 +105,15 @@ export default async function UmrohListPage({ params, searchParams }: Props) {
           <h2>Paket Umroh</h2>
         </div>
 
-        <MonthFilter
-          locale={locale}
-          currentMonth={currentMonth}
-          availableMonths={availableMonths}
-          basePath="/umroh"
-        />
+        <div className="filter-bar">
+          <MonthFilter
+            locale={locale}
+            currentMonth={currentMonth}
+            availableMonths={availableMonths}
+            basePath="/umroh"
+          />
+          <SortFilter />
+        </div>
 
         {packages && packages.length > 0 ? (
           <>
@@ -111,7 +126,7 @@ export default async function UmrohListPage({ params, searchParams }: Props) {
               currentPage={currentPage}
               totalPages={totalPages}
               basePath="/umroh"
-              searchParams={currentMonth ? { bulan: String(currentMonth) } : {}}
+              searchParams={paginationParams}
             />
           </>
         ) : (

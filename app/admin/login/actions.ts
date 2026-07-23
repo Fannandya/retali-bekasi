@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { cookies } from "next/headers";
+import { getExpiryTimestamp, getCookieOptions, getTimeoutCookieName } from "@/lib/timeout";
 
 const schema = z.object({
   email: z.string().email(),
@@ -24,6 +26,13 @@ export async function login(_prev: unknown, formData: FormData) {
   if (error) {
     return { error: error.message };
   }
+
+  const cookieStore = await cookies();
+  cookieStore.set(
+    getTimeoutCookieName(),
+    String(getExpiryTimestamp()),
+    getCookieOptions()
+  );
 
   return { success: true };
 }

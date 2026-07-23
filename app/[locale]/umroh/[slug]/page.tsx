@@ -4,6 +4,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatDuration, formatRupiah } from "@/lib/format";
+import { getOptimizedUrl } from "@/lib/image";
 import type { Database } from "@/types/database";
 import { QuotaIndicator } from "@/components/QuotaIndicator";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
@@ -123,7 +124,7 @@ export default async function UmrohDetailPage({ params }: Props) {
 
           <div className="detail-side">
             {pkg.brochure_url && (
-              <img src={pkg.brochure_url} alt="" className="w-full rounded-xl shadow-sm" />
+              <img src={getOptimizedUrl(pkg.brochure_url) ?? ""} alt="" className="w-full rounded-xl shadow-sm" />
             )}
           </div>
         </div>

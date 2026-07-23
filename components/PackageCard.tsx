@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { pickLocale } from "@/lib/pickLocale";
 import { formatDate, formatDuration, formatRupiah } from "@/lib/format";
 import { QuotaIndicator } from "./QuotaIndicator";
+import { getOptimizedUrl } from "@/lib/image";
 import type { Database } from "@/types/database";
 
 type Package = Database["public"]["Tables"]["packages"]["Row"] & {
@@ -16,7 +17,7 @@ export function PackageCard({
   locale: string;
 }) {
   const duration = formatDuration(pkg.departure_date, pkg.return_date);
-  const thumbnail = pkg.brochure_url;
+  const thumbnail = getOptimizedUrl(pkg.brochure_url);
 
   return (
     <div className="card">

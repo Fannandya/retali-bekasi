@@ -5,6 +5,7 @@ import { pickLocale } from "@/lib/pickLocale";
 import { createClient } from "@/lib/supabase/server";
 import { PackageCard } from "@/components/PackageCard";
 import { MonthFilter } from "@/components/MonthFilter";
+import { SortFilter } from "@/components/SortFilter";
 import { Pagination } from "@/components/Pagination";
 
 export const revalidate = 3600;
@@ -13,7 +14,7 @@ const ITEMS_PER_PAGE = 12;
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ bulan?: string; page?: string }>;
+  searchParams: Promise<{ bulan?: string; page?: string; sort?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function HajjListPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { bulan, page } = await searchParams;
+  const { bulan, page, sort } = await searchParams;
   const settings = await getSiteSettings();
   const supabase = await createClient();
 
@@ -42,8 +43,15 @@ export default async function HajjListPage({ params, searchParams }: Props) {
   let query = supabase
     .from("packages")
     .select("*", { count: "exact" })
-    .eq("type", "haji")
-    .order("departure_date");
+    .eq("type", "haji");
+
+  if (sort === "price_asc") {
+    query = query.order("price", { ascending: true });
+  } else if (sort === "price_desc") {
+    query = query.order("price", { ascending: false });
+  } else {
+    query = query.order("departure_date", { ascending: false });
+  }
 
   if (currentMonth) {
     query = query.eq("departure_month", currentMonth);
@@ -79,12 +87,19 @@ export default async function HajjListPage({ params, searchParams }: Props) {
     );
   }
 
+  const paginationParams: Record<string, string> = {};
+  if (currentMonth) paginationParams.bulan = String(currentMonth);
+  if (sort) paginationParams.sort = sort;
+
   return (
     <section style={{ paddingTop: "80px" }}>
       <div className="wrap">
         <div className="sec-head"><h2>Paket Haji</h2></div>
 
-        <MonthFilter locale={locale} currentMonth={currentMonth} availableMonths={availableMonths} basePath="/haji" />
+        <div className="filter-bar">
+          <MonthFilter locale={locale} currentMonth={currentMonth} availableMonths={availableMonths} basePath="/haji" />
+          <SortFilter />
+        </div>
 
         {packages && packages.length > 0 ? (
           <>
@@ -97,7 +112,7 @@ export default async function HajjListPage({ params, searchParams }: Props) {
               currentPage={currentPage}
               totalPages={totalPages}
               basePath="/haji"
-              searchParams={currentMonth ? { bulan: String(currentMonth) } : {}}
+              searchParams={paginationParams}
             />
           </>
         ) : (

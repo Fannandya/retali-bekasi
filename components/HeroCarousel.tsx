@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getOptimizedUrl } from "@/lib/image";
 
 type Props = {
   images: Array<{ url: string; path: string }>;
@@ -18,7 +19,7 @@ export function HeroCarousel({ images }: Props) {
 
   return (
     <div className="hero-carousel">
-      <img src={images[index].url} alt="" className="hero-img" />
+      <img src={getOptimizedUrl(images[index].url) ?? ""} alt="" className="hero-img" />
 
       {images.length > 1 && (
         <>

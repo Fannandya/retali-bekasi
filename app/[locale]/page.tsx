@@ -6,6 +6,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { createClient } from "@/lib/supabase/server";
 import { TestimonialEmbed } from "@/components/TestimonialEmbed";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { getOptimizedUrl } from "@/lib/image";
 
 export const revalidate = 3600;
 
@@ -24,7 +25,7 @@ export default async function HomePage({ params }: Props) {
     .select("*")
     .eq("is_featured", true)
     .order("departure_date")
-    .limit(4) as unknown as { data: any[] | null };
+    .limit(3) as unknown as { data: any[] | null };
   const newsRes = await supabase
     .from("news")
     .select("*")
@@ -81,7 +82,7 @@ export default async function HomePage({ params }: Props) {
             <h2>{t(settings.section_headings.paket?.title)}</h2>
             <p>{t(settings.section_headings.paket?.subtitle)}</p>
           </div>
-          <div className="grid grid-4">
+          <div className="grid grid-3">
             {featuredPackages.map((pkg) => (
               <PackageCard key={pkg.id} pkg={pkg} locale={locale} />
             ))}
@@ -100,11 +101,14 @@ export default async function HomePage({ params }: Props) {
       {/* TENTANG KAMI */}
       <section id="about" className="about">
         <div className="wrap">
-          {settings.about_content?.image_url ? (
-            <div className="ph" style={{ backgroundImage: `url(${settings.about_content.image_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-          ) : (
-            <div className="ph" />
-          )}
+          {(() => {
+            const img = getOptimizedUrl(settings.about_content?.image_url);
+            return img ? (
+              <div className="ph" style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+            ) : (
+              <div className="ph" />
+            );
+          })()}
           <div>
             <span className="eyebrow">Tentang Kami</span>
             <h2>{t(settings.section_headings.about?.title) || "Tentang Kami"}</h2>
@@ -134,9 +138,12 @@ export default async function HomePage({ params }: Props) {
           <div className="grid grid-3">
             {newsItems.map((item) => (
               <article key={item.id} className="news-card">
-                {item.cover_url && (
-                  <div className="ph" style={{ backgroundImage: `url(${item.cover_url})`, backgroundSize: "cover" }} />
-                )}
+                {(() => {
+                  const cover = getOptimizedUrl(item.cover_url);
+                  return cover ? (
+                    <div className="ph" style={{ backgroundImage: `url(${cover})`, backgroundSize: "cover" }} />
+                  ) : null;
+                })()}
                 <div className="news-body">
                   <span className="date">{item.published_at}</span>
                   <h3>{t(item.title)}</h3>

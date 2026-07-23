@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { getTimeoutCookieName, getCookieOptions } from "@/lib/timeout";
 
 export function AdminNav() {
   return (
@@ -32,5 +34,7 @@ async function handleLogout() {
   "use server";
   const supabase = await createClient();
   await supabase.auth.signOut();
+  const cookieStore = await cookies();
+  cookieStore.set(getTimeoutCookieName(), "", { ...getCookieOptions(), maxAge: 0 });
   redirect("/admin/login");
 }

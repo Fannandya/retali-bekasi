@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getTimeoutCookieName, getExpiryTimestamp, getCookieOptions } from "@/lib/timeout";
 
 export async function updateSession(
   request: NextRequest,
@@ -14,6 +15,17 @@ export async function updateSession(
     return supabaseResponse;
   }
 
+  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+  const isLoginPage = request.nextUrl.pathname === "/admin/login";
+
+  if (isAdminRoute && !isLoginPage) {
+    const timeoutCookie = request.cookies.get(getTimeoutCookieName())?.value;
+    if (!timeoutCookie || Date.now() > parseInt(timeoutCookie)) {
+      const loginUrl = new URL("/admin/login", request.url);
+      supabaseResponse = NextResponse.redirect(loginUrl);
+    }
+  }
+
   try {
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
@@ -24,13 +36,28 @@ export async function updateSession(
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          supabaseResponse = NextResponse.next({ request });
+          if (!supabaseResponse.headers.get("location")) {
+            supabaseResponse = NextResponse.next({ request });
+          }
           for (const { name, value, options } of cookiesToSet) {
             supabaseResponse.cookies.set(name, value, options);
           }
         },
       },
     });
+
+    if (isAdminRoute && !isLoginPage) {
+      const timeoutCookie = request.cookies.get(getTimeoutCookieName())?.value;
+      if (!timeoutCookie || Date.now() > parseInt(timeoutCookie)) {
+        await supabase.auth.signOut();
+        return supabaseResponse;
+      }
+      supabaseResponse.cookies.set(
+        getTimeoutCookieName(),
+        String(getExpiryTimestamp()),
+        getCookieOptions()
+      );
+    }
 
     await supabase.auth.getUser();
   } catch {
