@@ -42,7 +42,16 @@ export function Footer({
             <h4>{t("contact")}</h4>
             <a href={`https://wa.me/${settings.contact.whatsapp_number}`} className="wa-link"><WhatsAppIcon /> {settings.contact.phone}</a>
             <a href={`mailto:${settings.contact.email}`}>✉ {settings.contact.email}</a>
-            <a href="#">📍 {pickLocale(settings.contact.address, locale)}</a>
+            <a
+              href={
+                settings.contact.map_embed_url ||
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickLocale(settings.contact.address, locale))}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📍 {pickLocale(settings.contact.address, locale)}
+            </a>
           </div>
           <div>
             <h4>{t("followUs") || "Ikuti Kami"}</h4>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/slug";
 import { revalidatePackages } from "@/lib/revalidate";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2-upload";
 import type { Database } from "@/types/database";
 
 type Package = Database["public"]["Tables"]["packages"]["Row"];
@@ -30,38 +31,20 @@ export function PackageForm({ pkg }: { pkg?: Package }) {
 
   const [brochureFile, setBrochureFile] = useState<File | null>(null);
   const [itineraryFile, setItineraryFile] = useState<File | null>(null);
+  const brochureInputRef = useRef<HTMLInputElement>(null);
+  const itineraryInputRef = useRef<HTMLInputElement>(null);
 
   const handleSlugGenerate = () => {
     setSlug(slugify(nameId));
   };
 
-  const uploadImage = async (file: File, pkgId: string, prefix: string): Promise<{ url: string; path: string } | null> => {
-    if (!file.type.match(/^image\/(jpeg|webp|png)$/)) {
-      setError(`${prefix}: hanya file JPG/WebP/PNG yang diizinkan`);
+  const uploadImage = async (file: File, prefix: string): Promise<{ url: string; path: string } | null> => {
+    try {
+      return await uploadToR2(file, "brochures");
+    } catch (err: any) {
+      setError(`${prefix}: ${err.message}`);
       return null;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError(`${prefix}: maksimal 5 MB`);
-      return null;
-    }
-    const ext = file.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${ext}`;
-    const filePath = `${prefix}/${pkgId}/${fileName}`;
-
-    const { error: uploadErr } = await supabase.storage
-      .from("brochures")
-      .upload(filePath, file);
-
-    if (uploadErr) {
-      setError(uploadErr.message);
-      return null;
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("brochures")
-      .getPublicUrl(filePath);
-
-    return { url: urlData.publicUrl, path: filePath };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,24 +83,18 @@ export function PackageForm({ pkg }: { pkg?: Package }) {
 
     if (isEdit && pkg) {
       if (brochureFile) {
-        if (pkg.brochure_path) {
-          await supabase.storage.from("brochures").remove([pkg.brochure_path]);
-        }
-        const result = await uploadImage(brochureFile, pkg.id, "brosur");
-        if (result) {
-          packageData.brochure_url = result.url;
-          packageData.brochure_path = result.path;
-        }
+        const result = await uploadImage(brochureFile, "Brosur");
+        if (!result) { setLoading(false); return; }
+        if (pkg.brochure_path) await deleteFromR2(pkg.brochure_path).catch(() => {});
+        packageData.brochure_url = result.url;
+        packageData.brochure_path = result.path;
       }
       if (itineraryFile) {
-        if (pkg.itinerary_path) {
-          await supabase.storage.from("brochures").remove([pkg.itinerary_path]);
-        }
-        const result = await uploadImage(itineraryFile, pkg.id, "itinerary");
-        if (result) {
-          packageData.itinerary_url = result.url;
-          packageData.itinerary_path = result.path;
-        }
+        const result = await uploadImage(itineraryFile, "Itinerary");
+        if (!result) { setLoading(false); return; }
+        if (pkg.itinerary_path) await deleteFromR2(pkg.itinerary_path).catch(() => {});
+        packageData.itinerary_url = result.url;
+        packageData.itinerary_path = result.path;
       }
 
       const { error: err } = await sb.from("packages").update(packageData).eq("id", pkg.id);
@@ -128,25 +105,25 @@ export function PackageForm({ pkg }: { pkg?: Package }) {
         return;
       }
     } else {
-      const { data: newPkg, error: err } = await sb.from("packages").insert(packageData).select().single();
+      if (brochureFile) {
+        const result = await uploadImage(brochureFile, "Brosur");
+        if (!result) { setLoading(false); return; }
+        packageData.brochure_url = result.url;
+        packageData.brochure_path = result.path;
+      }
+      if (itineraryFile) {
+        const result = await uploadImage(itineraryFile, "Itinerary");
+        if (!result) { setLoading(false); return; }
+        packageData.itinerary_url = result.url;
+        packageData.itinerary_path = result.path;
+      }
+
+      const { error: err } = await sb.from("packages").insert(packageData);
 
       if (err) {
         setError(err.message);
         setLoading(false);
         return;
-      }
-
-      if (brochureFile) {
-        const result = await uploadImage(brochureFile, newPkg.id, "brosur");
-        if (result) {
-          await sb.from("packages").update({ brochure_url: result.url, brochure_path: result.path }).eq("id", newPkg.id);
-        }
-      }
-      if (itineraryFile) {
-        const result = await uploadImage(itineraryFile, newPkg.id, "itinerary");
-        if (result) {
-          await sb.from("packages").update({ itinerary_url: result.url, itinerary_path: result.path }).eq("id", newPkg.id);
-        }
       }
     }
 
@@ -300,13 +277,26 @@ export function PackageForm({ pkg }: { pkg?: Package }) {
         <label className="btn btn-ghost cursor-pointer inline-flex items-center gap-2 text-sm">
           Pilih File
           <input
+            ref={brochureInputRef}
             type="file"
             accept="image/jpeg,image/webp,image/png"
             onChange={(e) => setBrochureFile(e.target.files?.[0] || null)}
             className="hidden"
           />
         </label>
-        {brochureFile && <span className="text-sm text-muted ml-2">{brochureFile.name}</span>}
+        {brochureFile && (
+          <span className="text-sm text-muted ml-2 inline-flex items-center gap-1">
+            {brochureFile.name}
+            <button
+              type="button"
+              onClick={() => { setBrochureFile(null); if (brochureInputRef.current) brochureInputRef.current.value = ""; }}
+              className="text-red-600 hover:text-red-700 font-bold px-1"
+              aria-label="Batalkan pilihan file"
+            >
+              ×
+            </button>
+          </span>
+        )}
         {pkg?.brochure_url && !brochureFile && (
           <img src={pkg.brochure_url} alt="" className="mt-2 w-40 h-auto rounded-lg" />
         )}
@@ -317,13 +307,26 @@ export function PackageForm({ pkg }: { pkg?: Package }) {
         <label className="btn btn-ghost cursor-pointer inline-flex items-center gap-2 text-sm">
           Pilih File
           <input
+            ref={itineraryInputRef}
             type="file"
             accept="image/jpeg,image/webp,image/png"
             onChange={(e) => setItineraryFile(e.target.files?.[0] || null)}
             className="hidden"
           />
         </label>
-        {itineraryFile && <span className="text-sm text-muted ml-2">{itineraryFile.name}</span>}
+        {itineraryFile && (
+          <span className="text-sm text-muted ml-2 inline-flex items-center gap-1">
+            {itineraryFile.name}
+            <button
+              type="button"
+              onClick={() => { setItineraryFile(null); if (itineraryInputRef.current) itineraryInputRef.current.value = ""; }}
+              className="text-red-600 hover:text-red-700 font-bold px-1"
+              aria-label="Batalkan pilihan file"
+            >
+              ×
+            </button>
+          </span>
+        )}
         {pkg?.itinerary_url && !itineraryFile && (
           <img src={pkg.itinerary_url} alt="" className="mt-2 w-40 h-auto rounded-lg" />
         )}

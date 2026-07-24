@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/slug";
 import { revalidateNews } from "@/lib/revalidate";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2-upload";
 import type { Database } from "@/types/database";
 
 type NewsItem = Database["public"]["Tables"]["news"]["Row"];
@@ -21,6 +22,7 @@ export function NewsForm({ item }: { item?: NewsItem }) {
   const [contentEn, setContentEn] = useState(item ? (item.content as any)?.en || "" : "");
   const [isPublished, setIsPublished] = useState(item?.is_published || false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,23 +44,13 @@ export function NewsForm({ item }: { item?: NewsItem }) {
       let coverPath = item.cover_path;
 
       if (coverFile) {
-        if (item.cover_path) {
-          await supabase.storage.from("news-images").remove([item.cover_path]);
-        }
-        const ext = coverFile.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${ext}`;
-        const filePath = `news/${fileName}`;
-
-        const { error: uploadErr } = await supabase.storage
-          .from("news-images")
-          .upload(filePath, coverFile);
-
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from("news-images").getPublicUrl(filePath);
-          coverUrl = urlData.publicUrl;
-          coverPath = filePath;
-        } else {
-          setError(uploadErr.message);
+        try {
+          const result = await uploadToR2(coverFile, "news-images");
+          if (item.cover_path) await deleteFromR2(item.cover_path).catch(() => {});
+          coverUrl = result.url;
+          coverPath = result.path;
+        } catch (err: any) {
+          setError(err.message);
           setLoading(false);
           return;
         }
@@ -79,20 +71,12 @@ export function NewsForm({ item }: { item?: NewsItem }) {
       let coverPath = "";
 
       if (coverFile) {
-        const ext = coverFile.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${ext}`;
-        const filePath = `news/${fileName}`;
-
-        const { error: uploadErr } = await supabase.storage
-          .from("news-images")
-          .upload(filePath, coverFile);
-
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from("news-images").getPublicUrl(filePath);
-          coverUrl = urlData.publicUrl;
-          coverPath = filePath;
-        } else {
-          setError(uploadErr.message);
+        try {
+          const result = await uploadToR2(coverFile, "news-images");
+          coverUrl = result.url;
+          coverPath = result.path;
+        } catch (err: any) {
+          setError(err.message);
           setLoading(false);
           return;
         }
@@ -182,13 +166,26 @@ export function NewsForm({ item }: { item?: NewsItem }) {
         <label className="btn btn-ghost cursor-pointer inline-flex items-center gap-2 text-sm">
           Pilih File
           <input
+            ref={coverInputRef}
             type="file"
             accept="image/jpeg,image/webp,image/png"
             onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
             className="hidden"
           />
         </label>
-        {coverFile && <span className="text-sm text-muted ml-2">{coverFile.name}</span>}
+        {coverFile && (
+          <span className="text-sm text-muted ml-2 inline-flex items-center gap-1">
+            {coverFile.name}
+            <button
+              type="button"
+              onClick={() => { setCoverFile(null); if (coverInputRef.current) coverInputRef.current.value = ""; }}
+              className="text-red-600 hover:text-red-700 font-bold px-1"
+              aria-label="Batalkan pilihan file"
+            >
+              ×
+            </button>
+          </span>
+        )}
         {isEdit && item?.cover_url && !coverFile && (
           <img src={item.cover_url} alt="" className="w-32 h-20 object-cover rounded-lg mt-2" />
         )}

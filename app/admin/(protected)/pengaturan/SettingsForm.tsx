@@ -4,8 +4,9 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { revalidateSettings } from "@/lib/revalidate";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2-upload";
 
-const TABS = ["Branding", "Profil", "Statistik", "Judul Section", "Tentang", "CTA Band", "Kontak & Sosial", "Footer"];
+const TABS = ["Branding", "Profil", "Statistik", "Judul Section", "Tentang", "Banner Ajakan", "Kontak & Sosial", "Footer"];
 
 export function SettingsForm({ initialData }: { initialData: Record<string, any> }) {
   const router = useRouter();
@@ -35,6 +36,7 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
   const [aboutPreview, setAboutPreview] = useState<string | null>(
     initialData.about_content?.image_url || null
   );
+  const aboutInputRef = useRef<HTMLInputElement>(null);
   const [heroNewFiles, setHeroNewFiles] = useState<File[]>([]);
   const [heroRemovePaths, setHeroRemovePaths] = useState<string[]>([]);
   const heroInputRef = useRef<HTMLInputElement>(null);
@@ -49,44 +51,33 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
 
     if (removeAboutImage) {
       const oldPath = data.about_content?.image_path;
-      if (oldPath) {
-        await supabase.storage.from("about").remove([oldPath]);
-      }
+      if (oldPath) await deleteFromR2(oldPath).catch(() => {});
       data.about_content = { ...(data.about_content || {}), image_url: null, image_path: null };
       setRemoveAboutImage(false);
       setAboutPreview(null);
     }
 
     if (aboutFile) {
-      const oldPath = data.about_content?.image_path;
-      if (oldPath) {
-        await supabase.storage.from("about").remove([oldPath]);
-      }
-      const ext = aboutFile.name.split(".").pop();
-      const fileName = `about-${crypto.randomUUID()}.${ext}`;
-      const filePath = `about/${fileName}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("about")
-        .upload(filePath, aboutFile);
-
-      if (uploadErr) {
-        setNotif({ type: "error", text: `Gagal upload gambar: ${uploadErr.message}` });
+      try {
+        const oldPath = data.about_content?.image_path;
+        const result = await uploadToR2(aboutFile, "about");
+        if (oldPath) await deleteFromR2(oldPath).catch(() => {});
+        data.about_content = {
+          ...(data.about_content || {}),
+          image_url: result.url,
+          image_path: result.path,
+        };
+      } catch (err: any) {
+        setNotif({ type: "error", text: `Gagal upload gambar: ${err.message}` });
         setSaving(false);
         return;
       }
-
-      const { data: urlData } = supabase.storage.from("about").getPublicUrl(filePath);
-      data.about_content = {
-        ...(data.about_content || {}),
-        image_url: urlData.publicUrl,
-        image_path: filePath,
-      };
     }
 
     const currentImages: Array<{ url: string; path: string }> = [...(data.hero?.images || [])];
 
     if (heroRemovePaths.length > 0) {
-      await supabase.storage.from("hero").remove(heroRemovePaths);
+      await Promise.all(heroRemovePaths.map((p) => deleteFromR2(p).catch(() => {})));
       const remaining = currentImages.filter((img) => !heroRemovePaths.includes(img.path));
       data.hero = { ...(data.hero || {}), images: remaining };
       setHeroRemovePaths([]);
@@ -95,20 +86,13 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
     if (heroNewFiles.length > 0) {
       const uploaded: Array<{ url: string; path: string }> = [];
       for (const file of heroNewFiles) {
-        const ext = file.name.split(".").pop();
-        const fileName = `hero-${crypto.randomUUID()}.${ext}`;
-        const filePath = `hero/${fileName}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("hero")
-          .upload(filePath, file);
-
-        if (uploadErr) {
-          setNotif({ type: "error", text: `Gagal upload ${file.name}: ${uploadErr.message}` });
+        try {
+          uploaded.push(await uploadToR2(file, "hero"));
+        } catch (err: any) {
+          setNotif({ type: "error", text: `Gagal upload ${file.name}: ${err.message}` });
           setSaving(false);
           return;
         }
-        const { data: urlData } = supabase.storage.from("hero").getPublicUrl(filePath);
-        uploaded.push({ url: urlData.publicUrl, path: filePath });
       }
       data.hero = { ...(data.hero || {}), images: [...(data.hero?.images || []), ...uploaded] };
       setHeroNewFiles([]);
@@ -116,39 +100,28 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
 
     if (removeLogo) {
       const oldLogoPath = data.branding?.logo_path;
-      if (oldLogoPath) {
-        await supabase.storage.from("logos").remove([oldLogoPath]);
-      }
+      if (oldLogoPath) await deleteFromR2(oldLogoPath).catch(() => {});
       data.branding = { ...(data.branding || {}), logo_url: "", logo_path: "" };
       setRemoveLogo(false);
     }
 
     if (logoFile) {
-      const oldLogoPath = data.branding?.logo_path;
-      if (oldLogoPath) {
-        await supabase.storage.from("logos").remove([oldLogoPath]);
-      }
-      const ext = logoFile.name.split(".").pop();
-      const fileName = `logo-${crypto.randomUUID()}.${ext}`;
-      const filePath = `logo/${fileName}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("logos")
-        .upload(filePath, logoFile);
-
-      if (uploadErr) {
-        setNotif({ type: "error", text: `Gagal upload logo: ${uploadErr.message}` });
+      try {
+        const oldLogoPath = data.branding?.logo_path;
+        const result = await uploadToR2(logoFile, "logos");
+        if (oldLogoPath) await deleteFromR2(oldLogoPath).catch(() => {});
+        data.branding = {
+          ...(data.branding || {}),
+          logo_url: result.url,
+          logo_path: result.path,
+        };
+        setLogoFile(null);
+        if (logoInputRef.current) logoInputRef.current.value = "";
+      } catch (err: any) {
+        setNotif({ type: "error", text: `Gagal upload logo: ${err.message}` });
         setSaving(false);
         return;
       }
-
-      const { data: urlData } = supabase.storage.from("logos").getPublicUrl(filePath);
-      data.branding = {
-        ...(data.branding || {}),
-        logo_url: urlData.publicUrl,
-        logo_path: filePath,
-      };
-      setLogoFile(null);
-      if (logoInputRef.current) logoInputRef.current.value = "";
     }
 
     const failedKeys: string[] = [];
@@ -204,10 +177,19 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
                     className="hidden"
                   />
                 </label>
-                {(data.branding?.logo_url || logoFile) && (
+                {logoFile && (
                   <button
                     type="button"
-                    onClick={() => { setRemoveLogo(true); setLogoFile(null); if (logoInputRef.current) logoInputRef.current.value = ""; }}
+                    onClick={() => { setLogoFile(null); if (logoInputRef.current) logoInputRef.current.value = ""; }}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    × Batalkan pilihan
+                  </button>
+                )}
+                {!logoFile && data.branding?.logo_url && (
+                  <button
+                    type="button"
+                    onClick={() => { setRemoveLogo(true); if (logoInputRef.current) logoInputRef.current.value = ""; }}
                     className="btn btn-ghost text-sm"
                     style={{ color: "#e40014", borderColor: "#e40014" }}
                   >
@@ -228,8 +210,8 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
         {activeTab === 1 && (
           <>
             <h3 className="font-bold text-lg">Profil</h3>
-            <Field label="Eyebrow (ID)" value={data.hero?.eyebrow?.id || ""} onChange={(v) => updateField("hero", ["eyebrow", "id"], v)} />
-            <Field label="Eyebrow (EN)" value={data.hero?.eyebrow?.en || ""} onChange={(v) => updateField("hero", ["eyebrow", "en"], v)} />
+            <Field label="Label Atas Judul (ID)" value={data.hero?.eyebrow?.id || ""} onChange={(v) => updateField("hero", ["eyebrow", "id"], v)} />
+            <Field label="Label Atas Judul (EN)" value={data.hero?.eyebrow?.en || ""} onChange={(v) => updateField("hero", ["eyebrow", "en"], v)} />
             <Field label="Judul (ID)" value={data.hero?.title?.id || ""} onChange={(v) => updateField("hero", ["title", "id"], v)} />
             <Field label="Judul (EN)" value={data.hero?.title?.en || ""} onChange={(v) => updateField("hero", ["title", "en"], v)} />
             <Field label="Subjudul (ID)" value={data.hero?.subtitle?.id || ""} onChange={(v) => updateField("hero", ["subtitle", "id"], v)} />
@@ -255,8 +237,16 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
                       </div>
                     ))}
                   {heroNewFiles.map((f, i) => (
-                    <div key={`new-${i}`} className="w-28 h-20 rounded-lg bg-bg flex items-center justify-center text-xs text-muted">
-                      {f.name}
+                    <div key={`new-${i}`} className="relative w-28 h-20 rounded-lg bg-bg flex items-center justify-center text-xs text-muted p-1 text-center overflow-hidden">
+                      <span className="truncate">{f.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setHeroNewFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center shadow hover:bg-red-700 transition"
+                        aria-label="Batalkan pilihan file"
+                      >
+                        x
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -347,8 +337,8 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
             {["paket", "kabar", "testimoni", "galeri", "about"].map((section) => (
               <div key={section} className="p-3 bg-bg rounded-lg space-y-2">
                 <h4 className="font-semibold capitalize">{section}</h4>
-                <Field label="Eyebrow (ID)" value={data.section_headings?.[section]?.eyebrow?.id || ""} onChange={(v) => updateField("section_headings", [section, "eyebrow", "id"], v)} />
-                <Field label="Eyebrow (EN)" value={data.section_headings?.[section]?.eyebrow?.en || ""} onChange={(v) => updateField("section_headings", [section, "eyebrow", "en"], v)} />
+                <Field label="Label Atas Judul (ID)" value={data.section_headings?.[section]?.eyebrow?.id || ""} onChange={(v) => updateField("section_headings", [section, "eyebrow", "id"], v)} />
+                <Field label="Label Atas Judul (EN)" value={data.section_headings?.[section]?.eyebrow?.en || ""} onChange={(v) => updateField("section_headings", [section, "eyebrow", "en"], v)} />
                 <Field label="Judul (ID)" value={data.section_headings?.[section]?.title?.id || ""} onChange={(v) => updateField("section_headings", [section, "title", "id"], v)} />
                 <Field label="Judul (EN)" value={data.section_headings?.[section]?.title?.en || ""} onChange={(v) => updateField("section_headings", [section, "title", "en"], v)} />
               </div>
@@ -369,6 +359,7 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
                 <label className="btn btn-ghost cursor-pointer inline-flex items-center gap-2 text-sm">
                   Pilih File
                   <input
+                    ref={aboutInputRef}
                     type="file"
                     accept="image/jpeg,image/webp,image/png"
                     onChange={(e) => {
@@ -380,10 +371,23 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
                     className="hidden"
                   />
                 </label>
-                {aboutPreview && (
+                {aboutFile && (
                   <button
                     type="button"
-                    onClick={() => { setRemoveAboutImage(true); setAboutFile(null); setAboutPreview(null); }}
+                    onClick={() => {
+                      setAboutFile(null);
+                      setAboutPreview(data.about_content?.image_url || null);
+                      if (aboutInputRef.current) aboutInputRef.current.value = "";
+                    }}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    × Batalkan pilihan
+                  </button>
+                )}
+                {!aboutFile && aboutPreview && (
+                  <button
+                    type="button"
+                    onClick={() => { setRemoveAboutImage(true); setAboutPreview(null); }}
                     className="btn btn-ghost text-sm"
                     style={{ color: "#e40014", borderColor: "#e40014" }}
                   >
@@ -446,7 +450,8 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
 
         {activeTab === 5 && (
           <>
-            <h3 className="font-bold text-lg">CTA Band</h3>
+            <h3 className="font-bold text-lg">Banner Ajakan</h3>
+            <p className="text-xs text-muted mb-2">Banner yang muncul di bagian bawah halaman utama, sebelum footer — isinya judul, subjudul, dan tombol WhatsApp untuk mendorong pengunjung menghubungi Anda.</p>
             <Field label="Judul (ID)" value={data.cta_band?.title?.id || ""} onChange={(v) => updateField("cta_band", ["title", "id"], v)} />
             <Field label="Judul (EN)" value={data.cta_band?.title?.en || ""} onChange={(v) => updateField("cta_band", ["title", "en"], v)} />
             <Field label="Subjudul (ID)" value={data.cta_band?.subtitle?.id || ""} onChange={(v) => updateField("cta_band", ["subtitle", "id"], v)} />
@@ -464,7 +469,8 @@ export function SettingsForm({ initialData }: { initialData: Record<string, any>
             <Field label="Email" value={data.contact?.email || ""} onChange={(v) => updateField("contact", ["email"], v)} />
             <Field label="Alamat (ID)" value={data.contact?.address?.id || ""} onChange={(v) => updateField("contact", ["address", "id"], v)} />
             <Field label="Alamat (EN)" value={data.contact?.address?.en || ""} onChange={(v) => updateField("contact", ["address", "en"], v)} />
-            <Field label="Map Embed URL" value={data.contact?.map_embed_url || ""} onChange={(v) => updateField("contact", ["map_embed_url"], v)} />
+            <Field label="Link Google Maps" value={data.contact?.map_embed_url || ""} onChange={(v) => updateField("contact", ["map_embed_url"], v)} />
+            <p className="text-xs text-muted -mt-2">Tempel link berbagi dari Google Maps (klik "Bagikan" di lokasi Anda lalu salin link-nya). Dipakai untuk tombol "Alamat" dan peta di halaman Kontak & Tentang.</p>
             <hr />
             <Field label="Instagram" value={data.socials?.instagram || ""} onChange={(v) => updateField("socials", ["instagram"], v)} />
             <Field label="Facebook" value={data.socials?.facebook || ""} onChange={(v) => updateField("socials", ["facebook"], v)} />

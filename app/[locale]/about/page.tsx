@@ -3,6 +3,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
 import { RichText } from "@/components/RichText";
 import { getOptimizedUrl } from "@/lib/image";
+import { getMapEmbedSrc } from "@/lib/maps";
 
 export const revalidate = 3600;
 
@@ -67,20 +68,23 @@ export default async function AboutPage({ params }: Props) {
           </div>
         )}
 
-        {settings.contact.map_embed_url && (
-          <div className="card-about">
-            <h3 className="card-about-title">Lokasi Kantor</h3>
-            <iframe
-              src={settings.contact.map_embed_url}
-              width="100%"
-              height="350"
-              style={{ border: 0, borderRadius: "var(--radius)" }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-        )}
+        {(() => {
+          const mapSrc = getMapEmbedSrc(settings.contact.map_embed_url, t(settings.contact.address));
+          return mapSrc ? (
+            <div className="card-about">
+              <h3 className="card-about-title">Lokasi Kantor</h3>
+              <iframe
+                src={mapSrc}
+                width="100%"
+                height="350"
+                style={{ border: 0, borderRadius: "var(--radius)" }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          ) : null;
+        })()}
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickLocale } from "@/lib/pickLocale";
+import { getMapEmbedSrc } from "@/lib/maps";
 
 export const revalidate = 3600;
 
@@ -49,23 +50,34 @@ export default async function KontakPage({ params }: Props) {
               </a>
             )}
             {(settings.contact.address?.id || settings.contact.address?.en) && (
-              <div className="contact-item">
+              <a
+                href={
+                  settings.contact.map_embed_url ||
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t(settings.contact.address))}`
+                }
+                className="contact-item"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <strong>📍 Alamat</strong>
                 <span>{t(settings.contact.address)}</span>
-              </div>
+              </a>
             )}
           </div>
 
-          {settings.contact.map_embed_url && (
-            <iframe
-              src={settings.contact.map_embed_url}
-              width="100%"
-              height="400"
-              style={{ border: 0, borderRadius: "var(--radius)" }}
-              allowFullScreen
-              loading="lazy"
-            />
-          )}
+          {(() => {
+            const mapSrc = getMapEmbedSrc(settings.contact.map_embed_url, t(settings.contact.address));
+            return mapSrc ? (
+              <iframe
+                src={mapSrc}
+                width="100%"
+                height="400"
+                style={{ border: 0, borderRadius: "var(--radius)" }}
+                allowFullScreen
+                loading="lazy"
+              />
+            ) : null;
+          })()}
         </div>
       </div>
     </section>

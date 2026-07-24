@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "img.youtube.com" },
+      { protocol: "https", hostname: "retalikabupatenbekasi.my.id" },
     ],
   },
   allowedDevOrigins: ["100.111.250.47"],

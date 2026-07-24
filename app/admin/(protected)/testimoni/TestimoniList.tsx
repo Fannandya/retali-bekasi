@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { extractYoutubeId, extractInstagramShortcode, extractTikTokId } from "@/lib/video";
 import { revalidateTestimonials } from "@/lib/revalidate";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2-upload";
 import { DeleteButton } from "../paket/DeleteButton";
 
 const PLATFORMS = [
@@ -86,25 +87,17 @@ export function TestimoniList() {
 
       if (file) {
         setUploading(true);
-        const ext = file.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const filePath = fileName;
-
-        const { error: uploadError } = await supabase.storage.from("testimoni").upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-        if (uploadError) {
-          alert("Gagal upload foto: " + uploadError.message);
+        try {
+          const result = await uploadToR2(file, "testimoni");
+          if (editImage?.image_path) await deleteFromR2(editImage.image_path).catch(() => {});
+          imageUrl = result.url;
+          imagePath = result.path;
+        } catch (err: any) {
+          alert("Gagal upload foto: " + err.message);
           setUploading(false);
           setLoading(false);
           return;
         }
-
-        const { data: pubData } = supabase.storage.from("testimoni").getPublicUrl(filePath);
-        imageUrl = pubData?.publicUrl || "";
-        imagePath = filePath;
         setUploading(false);
       } else if (!editingId) {
         alert("Pilih foto terlebih dahulu");
@@ -212,7 +205,19 @@ export function TestimoniList() {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-green"
             />
-            {file && <p className="text-xs text-muted mt-1">{file.name} ({(file.size / 1024).toFixed(1)} KB)</p>}
+            {file && (
+              <p className="text-xs text-muted mt-1 inline-flex items-center gap-1">
+                {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                <button
+                  type="button"
+                  onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ""; }}
+                  className="text-red-600 hover:text-red-700 font-bold px-1"
+                  aria-label="Batalkan pilihan file"
+                >
+                  ×
+                </button>
+              </p>
+            )}
           </div>
         )}
 

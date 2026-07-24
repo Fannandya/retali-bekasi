@@ -8,10 +8,6 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: "Nama Travel | Umroh & Haji",
-    template: "%s | Nama Travel",
-  },
   description: "Biro perjalanan umroh & haji resmi berizin Kemenag.",
 };
 

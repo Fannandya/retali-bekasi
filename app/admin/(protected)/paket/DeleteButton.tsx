@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { revalidatePackages, revalidateNews, revalidateTestimonials } from "@/lib/revalidate";
+import { deleteFromR2 } from "@/lib/r2-upload";
 
 export function DeleteButton({ id, type, onDeleted }: { id: string; type: string; onDeleted?: () => void }) {
   const router = useRouter();
@@ -19,9 +20,7 @@ export function DeleteButton({ id, type, onDeleted }: { id: string; type: string
         .single();
       const pkg: { brochure_path: string | null; itinerary_path: string | null } | null = result.data;
       const paths = [pkg?.brochure_path, pkg?.itinerary_path].filter(Boolean) as string[];
-      for (const path of paths) {
-        await supabase.storage.from("brochures").remove([path]);
-      }
+      await Promise.all(paths.map((path) => deleteFromR2(path).catch(() => {})));
       const { error } = await (supabase as any).from("packages").delete().eq("id", id);
       if (error) {
         alert("Gagal menghapus paket: " + error.message);
@@ -32,7 +31,7 @@ export function DeleteButton({ id, type, onDeleted }: { id: string; type: string
       const result = await (supabase as any).from("news").select("cover_path").eq("id", id).single();
       const item: { cover_path: string | null } | null = result.data;
       if (item?.cover_path) {
-        await supabase.storage.from("news-images").remove([item.cover_path]);
+        await deleteFromR2(item.cover_path).catch(() => {});
       }
       const { error } = await (supabase as any).from("news").delete().eq("id", id);
       if (error) {
@@ -44,7 +43,7 @@ export function DeleteButton({ id, type, onDeleted }: { id: string; type: string
       const result = await (supabase as any).from("testimonials").select("image_path, type").eq("id", id).single();
       const item: { image_path: string | null; type: string } | null = result.data;
       if (item?.type === "image" && item?.image_path) {
-        await supabase.storage.from("testimoni").remove([item.image_path]);
+        await deleteFromR2(item.image_path).catch(() => {});
       }
       const { error } = await (supabase as any).from("testimonials").delete().eq("id", id);
       if (error) {

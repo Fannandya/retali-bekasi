@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: Props) {
       siteName: settings.branding.brand_name,
       images: settings.branding.og_image_url ? [{ url: settings.branding.og_image_url }] : [],
     },
+    icons: { icon: settings.branding.logo_url || "/default-favicon.ico" },
     alternates: {
       languages: {
         id: "/id",
